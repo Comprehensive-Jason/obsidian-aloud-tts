@@ -238,7 +238,7 @@ export const DEFAULT_SETTINGS: TTSPluginSettings = {
   openaicompat_generationSpeed: 1,
   // elevenlabs
   elevenlabs_apiKey: "",
-  elevenlabs_model: "eleven_multilingual_v2",
+  elevenlabs_model: "eleven_v4",
   elevenlabs_voice: "",
   elevenlabs_stability: 0.5,
   elevenlabs_similarity: 0.75,
