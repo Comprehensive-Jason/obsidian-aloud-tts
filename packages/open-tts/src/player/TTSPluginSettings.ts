@@ -15,6 +15,13 @@ export type TTSPluginSettings = {
   showPlayerView: PlayerViewMode;
   showEditorActionButton: boolean;
   autoScrollPlayerView: boolean;
+  /** Highlight the word currently being spoken */
+  highlightWords: boolean;
+  /** CSS color for the spoken word. Empty uses the theme default. */
+  highlightWordColor: string;
+  /** CSS color for the sentence being spoken. Empty uses the theme default. */
+  highlightSentenceColor: string;
+  highlightWordAnimation: WordHighlightAnimation;
   version: number;
   audioFolder: string;
   audioExportDestination: AudioExportDestination;
@@ -205,6 +212,15 @@ export const modelProviders = [
 ] as const;
 export type ModelProvider = (typeof modelProviders)[number];
 
+export const wordHighlightAnimations = [
+  "sweep",
+  "pop",
+  "glow",
+  "underline",
+  "none",
+] as const;
+export type WordHighlightAnimation = (typeof wordHighlightAnimations)[number];
+
 export const DEFAULT_SETTINGS: TTSPluginSettings = {
   modelProvider: "openai",
   chunkType: "sentence",
@@ -214,6 +230,10 @@ export const DEFAULT_SETTINGS: TTSPluginSettings = {
   showPlayerView: "always-mobile",
   showEditorActionButton: true,
   autoScrollPlayerView: true,
+  highlightWords: true,
+  highlightWordColor: "",
+  highlightSentenceColor: "",
+  highlightWordAnimation: "sweep",
   // gemini
   gemini_apiKey: "",
   gemini_ttsModel: "gemini-2.5-flash-preview-tts",
