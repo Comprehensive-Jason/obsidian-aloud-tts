@@ -29,6 +29,7 @@ import { MinimaxSettings } from "./settings/providers/provider-minimax";
 import { InworldSettings } from "./settings/providers/provider-inworld";
 import { PollySettings } from "./settings/providers/provider-polly";
 import { FishSettings } from "./settings/providers/provider-fish";
+import { KokoroSettings } from "./settings/providers/provider-kokoro";
 
 const providerSettingsViews: Record<
   ModelProvider,
@@ -39,6 +40,7 @@ const providerSettingsViews: Record<
   gemini: GeminiSettings,
   hume: HumeSettings,
   inworld: InworldSettings,
+  kokoro: KokoroSettings,
   minimax: MinimaxSettings,
   fish: FishSettings,
   openai: OpenAISettings,
@@ -154,6 +156,7 @@ const labels: Record<ModelProvider, string> = {
   fish: "Fish Audio",
   inworld: "Inworld",
   polly: "AWS Polly",
+  kokoro: "Kokoro (Self-Hosted)",
 };
 
 const ModelSwitcher: React.FC<{

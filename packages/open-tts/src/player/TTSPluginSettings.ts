@@ -34,7 +34,15 @@ export type TTSPluginSettings = {
   MinimaxModelConfig &
   FishModelConfig &
   InworldModelConfig &
-  PollyModelConfig);
+  PollyModelConfig &
+  KokoroModelConfig);
+
+export interface KokoroModelConfig {
+  /** base url of a Kokoro-FastAPI server, e.g. http://localhost:8880 */
+  kokoro_apiBase: string;
+  /** the voice to use, or a blend such as "af_bella+af_sky" */
+  kokoro_voice: string;
+}
 
 export interface InworldModelConfig {
   /** the API key to use */
@@ -209,6 +217,7 @@ export const modelProviders = [
   "fish",
   "inworld",
   "polly",
+  "kokoro",
 ] as const;
 export type ModelProvider = (typeof modelProviders)[number];
 
@@ -293,6 +302,10 @@ export const DEFAULT_SETTINGS: TTSPluginSettings = {
   polly_region: "us-east-1",
   polly_voiceId: "Joanna",
   polly_engine: "neural",
+
+  // kokoro
+  kokoro_apiBase: "http://localhost:8880",
+  kokoro_voice: "af_heart",
 
   version: 2,
   audioFolder: "aloud",

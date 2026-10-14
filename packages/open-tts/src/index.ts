@@ -5,6 +5,7 @@ export * from "./models/fish";
 export * from "./models/gemini";
 export * from "./models/hume";
 export * from "./models/inworld";
+export * from "./models/kokoro";
 export * from "./models/minimax";
 export * from "./models/openai";
 export * from "./models/openai-like";
