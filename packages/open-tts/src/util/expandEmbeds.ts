@@ -15,18 +15,22 @@ export interface ResolvedEmbed {
 }
 
 const EMBED_PATTERN = /!\[\[([^\]]+)\]\]/g;
-// A fenced block (to its closing fence, or the end of the text) or inline code
-const CODE_PATTERN = /^(```|~~~)[\s\S]*?(?:^\1|(?![\s\S]))|`[^`\n]+`/gm;
+// Where obsidian shows embeds as text: a fenced block (to its closing fence, or
+// the end of the text), inline code, or a %% comment %% (unclosed runs to the end)
+const UNRENDERED_PATTERN =
+  /^(```|~~~)[\s\S]*?(?:^\1|(?![\s\S]))|`[^`\n]+`|%%[\s\S]*?(?:%%|(?![\s\S]))/gm;
 
-/** The text's ![[embeds]], skipping any inside fenced or inline code */
+/** The text's ![[embeds]], skipping any inside code or comments */
 function embedMatches(text: string): RegExpMatchArray[] {
-  const code = [...text.matchAll(CODE_PATTERN)].map((match) => ({
+  const unrendered = [...text.matchAll(UNRENDERED_PATTERN)].map((match) => ({
     from: match.index!,
     to: match.index! + match[0].length,
   }));
   return [...text.matchAll(EMBED_PATTERN)].filter(
     (match) =>
-      !code.some(({ from, to }) => match.index! >= from && match.index! < to),
+      !unrendered.some(
+        ({ from, to }) => match.index! >= from && match.index! < to,
+      ),
   );
 }
 
