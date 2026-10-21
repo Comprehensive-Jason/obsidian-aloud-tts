@@ -105,7 +105,9 @@ export function computeWordHighlight(
   playbackSpeed: number,
 ): WordHighlightRange | null {
   const chunk = player.activeText?.currentChunk;
-  if (!chunk || chunk.timelineStartSeconds == null) {
+  // Embedded text isn't in the document, so there are no words of it to mark;
+  // the sentence highlight still covers the embed.
+  if (!chunk || chunk.embedded || chunk.timelineStartSeconds == null) {
     return null;
   }
   const time = sink.currentTime - chunk.timelineStartSeconds;
