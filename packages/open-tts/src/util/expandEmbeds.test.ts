@@ -38,6 +38,12 @@ describe("expandEmbeds", () => {
     ]);
   });
 
+  it("leaves embeds inside comments untouched, as obsidian doesn't render them", async () => {
+    const text = "Before %% ![[Source]] %% after";
+    const embeds = await expandEmbeds(text, lookupFrom({ Source: "Hello." }));
+    expect(embeds).toEqual([]);
+  });
+
   it("leaves embeds inside code untouched", async () => {
     const text = "```\n![[Source]]\n```\nand `![[Source]]` inline";
     const embeds = await expandEmbeds(text, lookupFrom({ Source: "Hello." }));
