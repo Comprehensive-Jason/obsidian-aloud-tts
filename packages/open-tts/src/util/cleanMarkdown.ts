@@ -62,6 +62,8 @@ export default function cleanMarkup(
         .replace(/^#/, "")
         .replace("#", ", "),
     )
+    // Remove obsidian block ids (" ^block-id" ending a line, or on a line of its own)
+    .replace(/(?:^|[ \t]+)\^[A-Za-z0-9-]+[ \t]*$/gm, "")
     // Remove blockquotes
     .replace(/^(\n)?\s{0,3}>\s?/gm, "$1")
     // .replace(/(^|\n)\s{0,3}>\s?/g, '\n\n')
