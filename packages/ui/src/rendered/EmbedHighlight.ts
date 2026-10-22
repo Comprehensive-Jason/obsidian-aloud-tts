@@ -50,7 +50,11 @@ export function createEmbedHighlightExtension(
       sink,
       settings,
       (chunk) =>
-        chunk.embedded && getActiveEditor() === view
+        // a hidden editor (e.g. behind Reading View) has no visible embeds to mark
+        chunk.embedded &&
+        getActiveEditor() === view &&
+        view.dom.isConnected &&
+        view.dom.offsetParent !== null
           ? findEmbedContent(view, chunk)
           : null,
     );
