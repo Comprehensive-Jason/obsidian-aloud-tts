@@ -9,6 +9,7 @@ import {
   createLoadingSpinnerExtension,
   createTTSHighlightExtension,
   createWordHighlightExtension,
+  createEmbedHighlightExtension,
   ObsidianLoadingWidgetFactory,
   PlayerView,
 } from "@open-tts/ui";
@@ -147,6 +148,12 @@ export function TTSCodeMirror(
       },
     ),
     createWordHighlightExtension(
+      player,
+      sink,
+      settings.settings,
+      () => obsidian.activeEditor,
+    ),
+    createEmbedHighlightExtension(
       player,
       sink,
       settings.settings,
