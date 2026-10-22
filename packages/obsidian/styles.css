@@ -559,3 +559,21 @@ details[open] .tts-error-details {
     transparent
   );
 }
+
+/* The player at the top of Reading View, above the scrolling note */
+.markdown-reading-view:has(> .tts-reading-toolbar:not(:empty)) {
+  display: flex;
+  flex-direction: column;
+}
+
+.markdown-reading-view
+  > .tts-reading-toolbar:not(:empty)
+  ~ .markdown-preview-view {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.tts-reading-toolbar:not(:empty) {
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
