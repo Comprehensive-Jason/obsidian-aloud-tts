@@ -58,8 +58,10 @@ export function createEmbedHighlightExtension(
           ? findEmbedContent(view, chunk)
           : null,
     );
+    // timers run on the editor's own window, which may be a pop-out
+    const win = view.dom.ownerDocument.defaultView ?? window;
     let frame: number | undefined;
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let timer: number | undefined;
     let destroyed = false;
     const tick = () => {
       frame = undefined;
@@ -69,17 +71,17 @@ export function createEmbedHighlightExtension(
       }
       highlighter.update();
       if (sink.isPlaying) {
-        frame = requestAnimationFrame(tick);
+        frame = win.requestAnimationFrame(tick);
       } else {
-        timer = setTimeout(tick, IDLE_POLL_MILLIS);
+        timer = win.setTimeout(tick, IDLE_POLL_MILLIS);
       }
     };
-    timer = setTimeout(tick, 0);
+    timer = win.setTimeout(tick, 0);
     return {
       destroy() {
         destroyed = true;
-        if (frame !== undefined) cancelAnimationFrame(frame);
-        if (timer !== undefined) clearTimeout(timer);
+        if (frame !== undefined) win.cancelAnimationFrame(frame);
+        if (timer !== undefined) win.clearTimeout(timer);
         highlighter.clear();
       },
     };
