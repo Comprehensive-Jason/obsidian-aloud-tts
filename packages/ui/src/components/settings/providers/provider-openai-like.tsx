@@ -31,10 +31,15 @@ function getCurrentOpenAICompatProfile(
   id: string,
   name: string,
 ): OpenAICompatProfile {
+  const secretName = store.usesSecretStore
+    ? store.settings.secretNames.openaicompat_apiKey
+    : undefined;
   return {
     id,
     name,
-    apiKey: store.settings.openaicompat_apiKey,
+    // a key kept in the secret store is saved by name, never copied into the profile
+    apiKey: secretName ? "" : store.settings.openaicompat_apiKey,
+    secretName,
     apiBase: store.settings.openaicompat_apiBase,
     ttsModel: store.settings.openaicompat_ttsModel,
     ttsVoice: store.settings.openaicompat_ttsVoice,
@@ -47,9 +52,18 @@ async function loadOpenAICompatProfile(
   store: TTSPluginSettingsStore,
   profile: OpenAICompatProfile,
 ) {
+  if (profile.secretName && store.usesSecretStore) {
+    await store.setSecretName(
+      "openaicompat",
+      "openaicompat_apiKey",
+      profile.secretName,
+    );
+  }
   await store.updateModelSpecificSettings("openaicompat", {
     openaicompat_activeProfileId: profile.id,
-    openaicompat_apiKey: profile.apiKey,
+    ...(profile.secretName && store.usesSecretStore
+      ? {}
+      : { openaicompat_apiKey: profile.apiKey }),
     openaicompat_apiBase: profile.apiBase,
     openaicompat_ttsModel: profile.ttsModel,
     openaicompat_ttsVoice: profile.ttsVoice,

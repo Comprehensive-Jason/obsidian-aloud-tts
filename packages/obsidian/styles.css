@@ -579,3 +579,7 @@ details[open] .tts-error-details {
   flex: 0 0 auto;
   border-bottom: 1px solid var(--background-modifier-border);
 }
+
+.tts-secret-missing {
+  color: var(--text-warning);
+}

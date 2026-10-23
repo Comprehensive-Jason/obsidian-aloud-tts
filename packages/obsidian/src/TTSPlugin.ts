@@ -1,5 +1,6 @@
 import { TTSCodeMirror } from "./TTSCodemirror";
 import { ReadingViewSupport } from "./reading/ReadingViewSupport";
+import { obsidianSecretStore } from "./util/keychain";
 import { createPlayerSynchronizer } from "@open-tts/ui";
 
 import { MarkdownView, Plugin, addIcon } from "obsidian";
@@ -284,6 +285,7 @@ export default class TTSPlugin extends Plugin {
     this.settings = await pluginSettingsStore(
       () => this.loadData(),
       (data) => this.saveData(data),
+      obsidianSecretStore(this.app),
     );
 
     const audio = await WebAudioSink.create();

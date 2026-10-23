@@ -1,3 +1,4 @@
+import * as mobx from "mobx";
 import { action, observable } from "mobx";
 import { TTSModelOptions } from "../models/tts-model";
 import { debounce } from "../util/misc";
@@ -5,6 +6,14 @@ import { hashStrings } from "../util/Minhash";
 import { OPENAI_API_URL } from "../models/openai";
 import { REGISTRY } from "../models/registry";
 import { CommentHandling } from "../util/cleanMarkdown";
+import {
+  MissingSecret,
+  SecretField,
+  SecretStore,
+  migrateToSecrets,
+  resolveSecrets,
+  withoutSecretValues,
+} from "./secretSettings";
 export { MARKETING_NAME, MARKETING_NAME_LONG } from "../marketing";
 
 export type TTSPluginSettings = {
@@ -27,6 +36,8 @@ export type TTSPluginSettings = {
   version: number;
   audioFolder: string;
   audioExportDestination: AudioExportDestination;
+  /** Names of the secrets (e.g. in Obsidian's keychain) that hold each credential */
+  secretNames: Partial<Record<SecretField, string>>;
 } & (GeminiModelConfig &
   HumeModelConfig &
   OpenAIModelConfig &
@@ -95,6 +106,8 @@ export interface OpenAICompatProfile {
   id: string;
   name: string;
   apiKey: string;
+  /** With a secret store, the secret holding this profile's key (apiKey stays empty) */
+  secretName?: string;
   apiBase: string;
   ttsModel: string;
   ttsVoice: string;
@@ -252,6 +265,7 @@ export const DEFAULT_SETTINGS: TTSPluginSettings = {
   chunkType: "sentence",
   commentHandling: "read",
   playbackSpeed: 1.0,
+  secretNames: {},
   cacheDurationMillis: 1000 * 60 * 60 * 24 * 7, // 7 days
   cacheType: "local",
   showPlayerView: "always-mobile",
@@ -343,15 +357,45 @@ export interface TTSPluginSettingsStore {
     settings: Partial<TTSPluginSettings>,
   ) => Promise<void>;
   setSpeed(speed: number): void;
+  /** Whether credentials are kept in a secret store rather than in saved data */
+  readonly usesSecretStore: boolean;
+  /** Named secrets that this device's secret store doesn't have */
+  missingSecrets: MissingSecret[];
+  /** Points a credential field at a named secret (or back to plaintext, with null) */
+  setSecretName(
+    provider: ModelProvider,
+    field: SecretField,
+    name: string | null,
+  ): Promise<void>;
 }
 
+/**
+ * @param secrets where credentials are kept (e.g. Obsidian's SecretStorage).
+ *   When given, plaintext keys are migrated into it on load and saved data
+ *   never contains a credential that has a secret name.
+ */
 export async function pluginSettingsStore(
   loadData: () => Promise<unknown>,
   saveData: (data: unknown) => Promise<void>,
+  secrets?: SecretStore,
 ): Promise<TTSPluginSettingsStore> {
+  let loaded = parsePluginSettings(await loadData());
+  let migratedCount = 0;
+  let missing: MissingSecret[] = [];
+  if (secrets) {
+    const migration = migrateToSecrets(loaded, secrets);
+    migratedCount = migration.migrated.length;
+    const resolution = resolveSecrets(migration.settings, secrets);
+    loaded = resolution.settings;
+    missing = resolution.missing;
+  }
+  const persist = (settings: TTSPluginSettings): Promise<void> =>
+    saveData(secrets ? withoutSecretValues(settings) : settings);
   const store = observable(
     {
-      settings: parsePluginSettings(await loadData()),
+      settings: loaded,
+      usesSecretStore: !!secrets,
+      missingSecrets: missing,
       apiKeyValid: undefined,
       apiKeyError: undefined,
       setApiKeyValidity(valid?: boolean, error?: string) {
@@ -380,7 +424,32 @@ export async function pluginSettingsStore(
         ) {
           await store.checkApiKey();
         }
-        await saveData(store.settings);
+        await persist(store.settings);
+      },
+      async setSecretName(
+        provider: ModelProvider,
+        field: SecretField,
+        name: string | null,
+      ) {
+        const secretNames = { ...store.settings.secretNames };
+        if (name) {
+          secretNames[field] = name;
+        } else {
+          delete secretNames[field];
+        }
+        const value = name && secrets ? secrets.getSecret(name) : null;
+        mobx.runInAction(() => {
+          store.missingSecrets = store.missingSecrets.filter(
+            (secret) => secret.field !== field,
+          );
+          if (name && value === null) {
+            store.missingSecrets.push({ field, name });
+          }
+        });
+        await store.updateModelSpecificSettings(provider, {
+          secretNames,
+          [field]: value ?? "",
+        });
       },
       async updateModelSpecificSettings(
         provider: ModelProvider,
@@ -405,10 +474,14 @@ export async function pluginSettingsStore(
       settings: observable,
       apiKeyValid: observable,
       apiKeyError: observable,
+      missingSecrets: observable,
       setApiKeyValidity: action,
       updateSettings: action,
     },
   );
+  if (migratedCount > 0) {
+    await persist(store.settings);
+  }
   store.checkApiKey();
   return store;
 }

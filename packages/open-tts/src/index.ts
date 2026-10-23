@@ -32,3 +32,15 @@ export { expandEmbeds } from "./util/expandEmbeds";
 export type { EmbedLookup, ResolvedEmbed } from "./util/expandEmbeds";
 export * from "./util/misc";
 export * from "./util/wordTiming";
+export {
+  SECRET_FIELDS,
+  defaultSecretName,
+  migrateToSecrets,
+  resolveSecrets,
+  withoutSecretValues,
+} from "./player/secretSettings";
+export type {
+  MissingSecret,
+  SecretField,
+  SecretStore,
+} from "./player/secretSettings";
