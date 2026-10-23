@@ -111,7 +111,7 @@ const AudioOptions: React.FC<{
           <select
             value={store.settings.chunkType}
             onChange={(e) =>
-              store.updateSettings({
+              void store.updateSettings({
                 chunkType: e.target.value as "sentence" | "paragraph",
               })
             }
@@ -133,7 +133,7 @@ const AudioOptions: React.FC<{
           <select
             value={store.settings.commentHandling}
             onChange={(e) =>
-              store.updateSettings({
+              void store.updateSettings({
                 commentHandling: e.target.value as CommentHandling,
               })
             }
