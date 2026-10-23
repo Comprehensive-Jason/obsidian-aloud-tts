@@ -106,12 +106,12 @@ export const ApiKeyComponent: React.FC<ApiKeyComponentProps> = observer(
                 ) : null}
               </TooltipSpan>
             ))}
-          {useSecretPicker ? (
+          {useSecretPicker && renderSecretPicker ? (
             <SecretPicker
-              render={renderSecretPicker!}
+              render={renderSecretPicker}
               value={store.settings.secretNames[fieldName] ?? ""}
               onChange={(name) =>
-                store.setSecretName(provider, fieldName, name)
+                void store.setSecretName(provider, fieldName, name)
               }
             />
           ) : (
@@ -120,7 +120,7 @@ export const ApiKeyComponent: React.FC<ApiKeyComponentProps> = observer(
                 type={showPassword ? "text" : "password"}
                 placeholder="API Key"
                 aria-label={displayName}
-                value={store.settings[fieldName] as string}
+                value={store.settings[fieldName]}
                 onChange={onChange}
                 className={
                   showValidation && validIcon === "alert-circle"
