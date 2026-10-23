@@ -27,3 +27,15 @@ export * from "./util/Minhash";
 export * from "./util/audioProcessing";
 export { default as cleanMarkup } from "./util/cleanMarkdown";
 export * from "./util/misc";
+export {
+  SECRET_FIELDS,
+  defaultSecretName,
+  migrateToSecrets,
+  resolveSecrets,
+  withoutSecretValues,
+} from "./player/secretSettings";
+export type {
+  MissingSecret,
+  SecretField,
+  SecretStore,
+} from "./player/secretSettings";
