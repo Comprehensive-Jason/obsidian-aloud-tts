@@ -9,11 +9,7 @@ import {
 } from "open-tts";
 import { findTextRange } from "./findTextRange";
 import { findWordRanges } from "./findWordRanges";
-import {
-  deleteHighlight,
-  highlightsSupported,
-  setHighlight,
-} from "./highlightRegistry";
+import { HighlightPainter, highlightPainterFor } from "./highlightRegistry";
 
 /** CSS Highlight API registry names, styled with ::highlight() in styles.css */
 export const SENTENCE_HIGHLIGHT = "tts-rendered-sentence";
@@ -47,7 +43,8 @@ function wholeRoot(root: Element): Range {
 export class RenderedHighlighter {
   private match: ChunkMatch | null = null;
   private previous: { root: Element; sentence: Range } | null = null;
-  private painted = false;
+  /** paints in the window showing the current root; null when nothing is painted */
+  private painter: HighlightPainter | null = null;
 
   constructor(
     private player: AudioStore,
@@ -59,15 +56,18 @@ export class RenderedHighlighter {
   ) {}
 
   update(): void {
-    if (!highlightsSupported()) {
-      return;
-    }
     const chunk = this.player.activeText?.currentChunk;
     const root = chunk ? this.findRoot(chunk) : null;
-    if (!chunk || !root || chunk.timelineStartSeconds == null) {
+    const painter = root ? highlightPainterFor(root) : null;
+    if (!chunk || !root || !painter || chunk.timelineStartSeconds == null) {
       this.clear();
       return;
     }
+    if (this.painter && this.painter.window !== painter.window) {
+      // the text moved to another window (e.g. a pop-out): unpaint the old one
+      this.clear();
+    }
+    this.painter = painter;
     if (this.match?.chunk !== chunk || this.match.root !== root) {
       this.match = this.matchChunk(chunk, root);
       this.paintSentence();
@@ -77,11 +77,9 @@ export class RenderedHighlighter {
 
   clear(): void {
     this.match = null;
-    if (this.painted) {
-      deleteHighlight(SENTENCE_HIGHLIGHT);
-      deleteHighlight(WORD_HIGHLIGHT);
-    }
-    this.painted = false;
+    this.painter?.delete(SENTENCE_HIGHLIGHT);
+    this.painter?.delete(WORD_HIGHLIGHT);
+    this.painter = null;
   }
 
   private matchChunk(chunk: AudioTextChunk, root: Element): ChunkMatch {
@@ -120,9 +118,9 @@ export class RenderedHighlighter {
 
   private paintSentence(): void {
     const match = this.match!;
-    setHighlight(SENTENCE_HIGHLIGHT, match.sentence);
-    deleteHighlight(WORD_HIGHLIGHT);
-    this.painted = true;
+    const painter = this.painter!;
+    painter.set(SENTENCE_HIGHLIGHT, match.sentence);
+    painter.delete(WORD_HIGHLIGHT);
     const start = match.sentence.startContainer;
     const element =
       start.nodeType === Node.ELEMENT_NODE
@@ -135,8 +133,9 @@ export class RenderedHighlighter {
 
   private paintWord(): void {
     const match = this.match!;
+    const painter = this.painter!;
     if (!this.settings.highlightWords || !match.matched) {
-      deleteHighlight(WORD_HIGHLIGHT);
+      painter.delete(WORD_HIGHLIGHT);
       return;
     }
     // Timings can arrive after the sentence was matched (estimates need the duration)
@@ -147,9 +146,9 @@ export class RenderedHighlighter {
     const index = findWordIndexAt(match.timings, time);
     const word = index >= 0 ? match.words[index] : null;
     if (word) {
-      setHighlight(WORD_HIGHLIGHT, word);
+      painter.set(WORD_HIGHLIGHT, word);
     } else {
-      deleteHighlight(WORD_HIGHLIGHT);
+      painter.delete(WORD_HIGHLIGHT);
     }
   }
 }
