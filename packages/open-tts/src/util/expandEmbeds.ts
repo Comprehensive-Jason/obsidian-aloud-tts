@@ -66,7 +66,7 @@ async function inlineEmbeds(
   let output = "";
   let lastIndex = 0;
   for (const match of embedMatches(text)) {
-    output += text.slice(lastIndex, match.index!);
+    output += text.slice(lastIndex, match.index);
     lastIndex = match.index! + match[0].length;
     const link = match[1];
     if (ancestors.has(link)) {
