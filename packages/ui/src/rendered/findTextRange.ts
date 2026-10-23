@@ -53,7 +53,7 @@ const withoutWhitespace = (char: string): string =>
 
 /** A range from the first to the last of the given character positions */
 export function rangeBetween(first: CharPosition, last: CharPosition): Range {
-  const range = first.node.ownerDocument!.createRange();
+  const range = first.node.ownerDocument.createRange();
   range.setStart(first.node, first.offset);
   range.setEnd(last.node, last.offset + 1);
   return range;

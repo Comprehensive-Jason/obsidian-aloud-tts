@@ -8,28 +8,39 @@ interface HighlightRegistry {
 
 type HighlightConstructor = new (...ranges: Range[]) => unknown;
 
-function registry(): HighlightRegistry | null {
-  const css = globalThis.CSS as unknown as
-    | { highlights?: HighlightRegistry }
-    | undefined;
-  return css?.highlights ?? null;
+interface WindowWithHighlights {
+  CSS?: { highlights?: HighlightRegistry };
+  Highlight?: HighlightConstructor;
 }
 
-/** Whether the browser can paint highlights over arbitrary text ranges */
-export function highlightsSupported(): boolean {
-  return (
-    registry() !== null &&
-    typeof (globalThis as { Highlight?: unknown }).Highlight === "function"
-  );
+/** Paints named highlights in one window's registry */
+export interface HighlightPainter {
+  /** the window whose registry this paints in */
+  readonly window: Window;
+  /** Paints `range` under `name`, replacing whatever that name painted before */
+  set(name: string, range: Range): void;
+  delete(name: string): void;
 }
 
-/** Paints `range` under `name`, replacing whatever that name painted before */
-export function setHighlight(name: string, range: Range): void {
-  const Highlight = (globalThis as { Highlight?: HighlightConstructor })
-    .Highlight!;
-  registry()?.set(name, new Highlight(range));
-}
-
-export function deleteHighlight(name: string): void {
-  registry()?.delete(name);
+/**
+ * The highlight registry of the window showing `node`. Each window (including
+ * Obsidian's pop-out windows) has its own registry, and highlights only show
+ * in the registry of the window that owns the text. Returns null when that
+ * window can't paint highlights over arbitrary text ranges.
+ */
+export function highlightPainterFor(node: Node): HighlightPainter | null {
+  const document = node.ownerDocument ?? (node as Document);
+  const window = document.defaultView;
+  const { CSS, Highlight } = (window ?? {}) as WindowWithHighlights;
+  const registry = CSS?.highlights;
+  if (!window || !registry || typeof Highlight !== "function") {
+    return null;
+  }
+  return {
+    window,
+    set: (name, range) => registry.set(name, new Highlight(range)),
+    delete: (name) => {
+      registry.delete(name);
+    },
+  };
 }
