@@ -22,7 +22,7 @@ interface PreviewInternals {
 type Section = Required<PreviewSection>;
 
 function preview(view: MarkdownView): PreviewInternals {
-  return view.previewMode as unknown as PreviewInternals;
+  return view.previewMode;
 }
 
 /** Sections that come from the note's text (not the title or properties UI) */

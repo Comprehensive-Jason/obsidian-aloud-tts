@@ -27,7 +27,7 @@ export class ReadingViewSupport {
   /** bumped on layout and leaf changes so players re-check whether to show */
   private layoutVersion = mobx.observable.box(0);
   private frame: number | undefined;
-  private timer: ReturnType<typeof setTimeout> | undefined;
+  private timer: number | undefined;
   private destroyed = false;
 
   constructor(
@@ -51,15 +51,15 @@ export class ReadingViewSupport {
     this.app.workspace.on("layout-change", this.onLayoutChange);
     this.app.workspace.on("active-leaf-change", this.onLayoutChange);
     this.onLayoutChange();
-    this.timer = setTimeout(this.tick, 0);
+    this.timer = window.setTimeout(this.tick, 0);
   }
 
   destroy(): void {
     this.destroyed = true;
     this.app.workspace.off("layout-change", this.onLayoutChange);
     this.app.workspace.off("active-leaf-change", this.onLayoutChange);
-    if (this.frame !== undefined) cancelAnimationFrame(this.frame);
-    if (this.timer !== undefined) clearTimeout(this.timer);
+    if (this.frame !== undefined) window.cancelAnimationFrame(this.frame);
+    if (this.timer !== undefined) window.clearTimeout(this.timer);
     this.highlighter.clear();
     for (const { container, root } of this.players.values()) {
       root.unmount();
@@ -87,9 +87,9 @@ export class ReadingViewSupport {
     }
     this.highlighter.update();
     if (this.sink.isPlaying) {
-      this.frame = requestAnimationFrame(this.tick);
+      this.frame = window.requestAnimationFrame(this.tick);
     } else {
-      this.timer = setTimeout(this.tick, IDLE_POLL_MILLIS);
+      this.timer = window.setTimeout(this.tick, IDLE_POLL_MILLIS);
     }
   };
 
@@ -137,8 +137,9 @@ export class ReadingViewSupport {
 
   private mountPlayer(view: MarkdownView): void {
     const readingEl = view.previewMode.containerEl;
-    const container = readingEl.ownerDocument.createElement("div");
-    container.classList.add("tts-toolbar", "tts-reading-toolbar");
+    const container = readingEl.createDiv({
+      cls: ["tts-toolbar", "tts-reading-toolbar"],
+    });
     readingEl.prepend(container);
     const root = createRoot(container);
     root.render(
