@@ -118,3 +118,11 @@ export function withoutSecretValues(
   }
   return saved;
 }
+
+/** The missing secrets that `provider` needs (its fields are named `<provider>_...`) */
+export function missingSecretsFor(
+  provider: string,
+  missing: MissingSecret[],
+): MissingSecret[] {
+  return missing.filter((secret) => secret.field.startsWith(`${provider}_`));
+}

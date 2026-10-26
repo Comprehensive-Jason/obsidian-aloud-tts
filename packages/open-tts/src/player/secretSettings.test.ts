@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS } from "./TTSPluginSettings";
 import {
   SecretStore,
   migrateToSecrets,
+  missingSecretsFor,
   resolveSecrets,
 } from "./secretSettings";
 
@@ -78,5 +79,17 @@ describe("resolveSecrets", () => {
     expect(missing).toEqual([
       { field: "openai_apiKey", name: "aloud-openai-api-key" },
     ]);
+  });
+});
+
+describe("missingSecretsFor", () => {
+  it("returns only the missing secrets the given provider needs", () => {
+    const missing = [
+      { field: "openaicompat_apiKey" as const, name: "openrouter" },
+      { field: "polly_secretAccessKey" as const, name: "aws" },
+    ];
+    expect(missingSecretsFor("openaicompat", missing)).toEqual([missing[0]]);
+    expect(missingSecretsFor("openai", missing)).toEqual([]);
+    expect(missingSecretsFor("polly", missing)).toEqual([missing[1]]);
   });
 });
