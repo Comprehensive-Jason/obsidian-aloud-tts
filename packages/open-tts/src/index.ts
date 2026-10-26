@@ -31,6 +31,7 @@ export {
   SECRET_FIELDS,
   defaultSecretName,
   migrateToSecrets,
+  missingSecretsFor,
   resolveSecrets,
   withoutSecretValues,
 } from "./player/secretSettings";
