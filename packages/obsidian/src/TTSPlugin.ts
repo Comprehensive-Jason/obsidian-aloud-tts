@@ -11,6 +11,7 @@ import { WebAudioSink } from "open-tts/browser";
 import { AudioStore, loadAudioStore } from "open-tts";
 import { AudioSystem, createAudioSystem } from "open-tts";
 import { ChunkLoader } from "open-tts";
+import { createTTSActions } from "open-tts";
 import {
   MARKETING_NAME,
   TTSPluginSettings,
@@ -145,17 +146,10 @@ export default class TTSPlugin extends Plugin {
       id: "play-pause",
       name: "Play/pause",
       checkCallback: (checking) => {
-        const active = this.player.activeText;
         if (checking) {
           return true;
         }
-        if (!active) {
-          this.bridge.playSelection();
-        } else if (this.player.activeText?.isPlaying) {
-          this.player.activeText?.pause();
-        } else {
-          this.player.activeText?.play();
-        }
+        createTTSActions(this.player, this.settings, this.bridge).playPause();
       },
     });
 
