@@ -142,6 +142,7 @@ export default class TTSPlugin extends Plugin {
     );
 
     // this pause/resumes the current audio, or initiates a new audio if nothing is playing
+    // or the paused audio is from another note than the focused one
     this.addCommand({
       id: "play-pause",
       name: "Play/pause",
@@ -149,7 +150,9 @@ export default class TTSPlugin extends Plugin {
         if (checking) {
           return true;
         }
-        createTTSActions(this.player, this.settings, this.bridge).playPause();
+        createTTSActions(this.player, this.settings, this.bridge).playPause({
+          followFocus: true,
+        });
       },
     });
 
